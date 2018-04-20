@@ -10,17 +10,37 @@
 
 
 /**
+  * Change the system's main state and perform necessary actions
+*/
+void changeMainState(MainState newState){
+  mainState = newState;
+  // todo: timing stuff?
+}
+
+/**
+  * Change the system's detect state and perform necessary actions
+*/
+void changeDetectState(DetectState newState){
+  detectState = newState;
+  // todo: timing stuff?
+}
+
+/**
   * Initialize the application by starting various parts of the state machine
   * and loading the robot's API
 */
 void initialize(){
+  // Loop variables - C99 :(
+  int x;
+  int y;
+
   // Initialize the API-specific things
   FA_RobotInit();
   FA_LCDBacklight(50);
 
   // Initialize the maze by iteratively setting its walls attributes
-  for(int x = 0; x < SIZE_X; x++){
-    for(int y = 0; y < SIZE_Y; y++){
+  for(x = 0; x < SIZE_X; x++){
+    for(y = 0; y < SIZE_Y; y++){
       maze[x][y].walls[DIR_NORTH] = false;
       maze[x][y].walls[DIR_EAST] = false;
       maze[x][y].walls[DIR_SOUTH] = false;
@@ -30,6 +50,20 @@ void initialize(){
       maze[x][y].visited = false;
     }
   }
+
+  // Construct the left + right border walls
+  for(x = 0; x < SIZE_X; x++){
+    maze[x][0].walls[DIR_WEST] = true;
+    maze[x][SIZE_X - 1].walls[DIR_EAST] = true;
+  }
+
+  for(y = 0; y < SIZE_Y; y++){
+    maze[SIZE_Y - 1][y].walls[DIR_SOUTH] = true;
+    maze[0][y].walls[DIR_NORTH] = true;
+  }
+
+  // Move to the next state...
+  changeMainState(MAIN_DETECT);
 }
 
 /**
@@ -62,20 +96,22 @@ int main(){
       break;
 
       case MAIN_DETECT:
+        detect();
       break;
 
       case MAIN_TURN:
       break;
 
       case MAIN_DRIVE:
+        drive();
       break;
 
       case MAIN_FINISH:
       break;
 
       default:
+      break;
       // todo: error handling
     }
-
   }
 }
