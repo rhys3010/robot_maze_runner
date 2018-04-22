@@ -90,6 +90,11 @@ void detect(){
 */
 void turn(){
 
+  // Todo when turning:
+  // * Update Direction
+  // * Crash preventing reactive behaviours?
+  // * Turn the robot
+
   // Check if left turn is possible (PRIORITY #1)
   if(!currentCell->walls[DIR_WEST]){
     // Turn left
@@ -118,6 +123,12 @@ void turn(){
   * Constantly check for cell changes then enact the correct behaviour
 */
 void drive(){
+
+  // Todo when driving:
+  // * Basic reactive behaviour to stop crash
+  // * Check for floor lines (cell change)
+  //    > Update Current pos + current cell
+  //    > Change to 'detect' state
 }
 
 
@@ -126,6 +137,11 @@ void drive(){
   * (Some LED flashes and a buzzer sound)
 */
 void end(){
+
+  // Todo to end:
+  // * Stop the robot
+  // * Play a tune
+  // * Flash some LEDs
 }
 
 /**
