@@ -7,25 +7,41 @@
 */
 
 // Preprocessor constants for directions
-#define DIR_NORTH 0
-#define DIR_EAST  1
-#define DIR_SOUTH 2
-#define DIR_WEST  3
+#define DIR_NORTH       0
+#define DIR_EAST        1
+#define DIR_SOUTH       2
+#define DIR_WEST        3
 
 // Size of the maze (4x4 by default)
-#define SIZE_X    4
-#define SIZE_Y    4
+#define SIZE_X          4
+#define SIZE_Y          4
+
+// Preprocessor constants for the Infra Red detectors
+#define IR_LEFT         0
+#define IR_FRONT_LEFT   1
+#define IR_FRONT        2
+#define IR_FRONT_RIGHT  3
+#define IR_RIGHT        4
+#define IR_REAR_RIGHT   5
+#define IR_REAR         6
+#define IR_REAR_LEFT    7
 
 /**
   * SYSTEM CONSTANTS
 */
+// The IR reading distance to detect a wall
 const int WALL_DIST_THRESHOLD = 0;
-const int MOTOR_SPEED = 0;
+// The light level reading to mark cell as nest
+const int LIGHT_LEVEL_THRESHOLD = 0;
+const int MOTOR_SPEED = 20;
 
 /**
   * INFO VARIABLES
 */
 int currentDirection = DIR_NORTH;
+// 1 as default
+int currentPosX = 1;
+int currentPosY = 0;
 
 /**
   * STATE MACHINE SETUP
@@ -39,23 +55,12 @@ typedef enum{
   MAIN_FINISH,
 } MainState;
 
-// The possible states for the Obstacle Detection FSM
-typedef enum{
-  DETECT_START,
-  DETECT_TURN_LEFT,
-  DETECT_CHECK_LEFT,
-  DETECT_TURN_RIGHT,
-  DETECT_CHECK_RIGHT,
-  DETECT_FINISH,
-} DetectState;
 
 // The state machine variables
 MainState mainState;
-DetectState detectState;
 
 // State machine functions
 void changeMainState(MainState newState);
-void changeDetectState(DetectState newState);
 
 /**
   * MAZE MODEL
@@ -64,8 +69,6 @@ void changeDetectState(DetectState newState);
 */
 
 typedef struct{
-  // Store wether or not the cell is dark
-  bool dark;
   // Store wether or not the cell has been previously visited
   bool visited;
   // Store the status of the walls for each cell (NORTH, EAST, SOUTH, WEST) - 0,1,2 and 3rd element of the Array
@@ -75,4 +78,16 @@ typedef struct{
 // Create the 2D maze array and store pointers to the current cell
 Cell maze[SIZE_X][SIZE_Y];
 
+// The current cell of the robot and the nest cell (default null)
 Cell *currentCell;
+Cell *nestCell;
+
+
+/**
+  * BEHAVIOURAL FUNCTIONS
+*/
+void initialize();
+void detect();
+void drive();
+void turn();
+void end();

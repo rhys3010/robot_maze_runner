@@ -18,14 +18,6 @@ void changeMainState(MainState newState){
 }
 
 /**
-  * Change the system's detect state and perform necessary actions
-*/
-void changeDetectState(DetectState newState){
-  detectState = newState;
-  // todo: timing stuff?
-}
-
-/**
   * Initialize the application by starting various parts of the state machine
   * and loading the robot's API
 */
@@ -46,7 +38,6 @@ void initialize(){
       maze[x][y].walls[DIR_SOUTH] = false;
       maze[x][y].walls[DIR_WEST] = false;
 
-      maze[x][y].dark = false;
       maze[x][y].visited = false;
     }
   }
@@ -62,20 +53,79 @@ void initialize(){
     maze[0][y].walls[DIR_NORTH] = true;
   }
 
+  // Set the current cell pointer to the current position
+  currentCell = &maze[currentPosX][currentPosY];
+
   // Move to the next state...
   changeMainState(MAIN_DETECT);
 }
 
 /**
-  *
+  * Handle the detection behaviour of the state machine by
+  * updating the model of the system depending on wall locations and light levels etc
 */
 void detect(){
+
+  // Mark Current Cell as Visited
+  currentCell->visited = true;
+
+  // Detect all the cell's walls and update the maze model
+  currentCell->walls[DIR_NORTH] = FA_ReadIR(IR_FRONT) > WALL_DIST_THRESHOLD;
+  currentCell->walls[DIR_EAST]  = FA_ReadIR(IR_RIGHT) > WALL_DIST_THRESHOLD;
+  currentCell->walls[DIR_SOUTH] = FA_ReadIR(IR_REAR) > WALL_DIST_THRESHOLD;
+  currentCell->walls[DIR_WEST]  = FA_ReadIR(IR_LEFT) > WALL_DIST_THRESHOLD;
+
+  // Detect Light Level in the cell to check for nest then update model
+  if(FA_ReadLight() < LIGHT_LEVEL_THRESHOLD){
+    nestCell = currentCell;
+  }
+
+  // Advance the state machine
+  changeMainState(MAIN_TURN);
 }
 
 /**
-  *
+  * Implements the turning aspect of the robot's behaviour
+  * by using the 'Left Hand Rule', allowing the robot to solve the maze
+*/
+void turn(){
+
+  // Check if left turn is possible (PRIORITY #1)
+  if(!currentCell->walls[DIR_WEST]){
+    // Turn left
+
+    // Otherwise check if forward is possible (PRIORITY #2)
+  }else if(!currentCell->walls[DIR_NORTH]){
+    // Go forward
+    // Probably change state?
+
+    // Right turn possible? (PRIORITY #3)
+  }else if(!currentCell->walls[DIR_EAST]){
+    // Turn right
+
+    // If none of the above are possible, robot is in dead end and must turn around
+  }else{
+    // Turn around
+  }
+
+  // Change state to drive out of cell
+  changeMainState(MAIN_DRIVE);
+}
+
+/**
+  * Implements the cruising aspect of the robot and it's basic reactive behaviour
+  * Whilst simultaniously modelling the maze and using the FSM.
+  * Constantly check for cell changes then enact the correct behaviour
 */
 void drive(){
+}
+
+
+/**
+  * The robot's behaviour when it has finished crawling the maze
+  * (Some LED flashes and a buzzer sound)
+*/
+void end(){
 }
 
 /**
@@ -100,6 +150,7 @@ int main(){
       break;
 
       case MAIN_TURN:
+        turn();
       break;
 
       case MAIN_DRIVE:
@@ -107,10 +158,11 @@ int main(){
       break;
 
       case MAIN_FINISH:
+        end();
       break;
 
       default:
-      break;
+        puts("Error");
       // todo: error handling
     }
   }
