@@ -47,6 +47,19 @@ void changeMainState(MainState newState){
   * Temp
 */
 void newCell(){
+
+
+  if(FA_BTConnected()){
+    FA_BTSendString("Current Position (X Y): \n", 30);
+    FA_BTSendNumber(currentPosX);
+    FA_BTSendString("\n", 4);
+    FA_BTSendNumber(currentPosY);
+    FA_BTSendString("\n", 4);
+    FA_BTSendString("Cells Visited: \n", 30);
+    FA_BTSendNumber(noVisitedCells);
+    FA_BTSendString("\n", 4);
+  }
+
   switch(currentDirection){
     case DIR_NORTH:
       currentPosY++;
@@ -64,6 +77,13 @@ void newCell(){
       currentPosX--;
     break;
   }
+
+  currentCell = &maze[currentPosX][currentPosY];
+
+  // Mark Current Cell as Visited
+  currentCell->visited = true;
+  // Increment number of visited cells
+  noVisitedCells++;
 
   changeMainState(MAIN_DETECT);
 }
@@ -111,6 +131,7 @@ void initialize(){
   // Set the current cell pointer to the current position
   currentCell = &maze[currentPosX][currentPosY];
 
+
   // Move to the next state...
   changeMainState(MAIN_DETECT);
 }
@@ -120,11 +141,6 @@ void initialize(){
   * updating the model of the system depending on wall locations and light levels etc
 */
 void detect(){
-
-  // Mark Current Cell as Visited
-  currentCell->visited = true;
-  // Increment number of visited cells
-  noVisitedCells++;
 
   // Check if all cells have been visited (crawling finished)
   if(noVisitedCells > (SIZE_X * SIZE_Y)){
@@ -212,7 +228,7 @@ void drive(){
     FA_SetMotors(0, 0);
     FA_Forwards(140);
     FA_PlayNote(300, 100);
-    changeMainState(MAIN_DETECT);
+    newCell();
   }
 }
 
