@@ -14,7 +14,29 @@
 */
 void changeMainState(MainState newState){
   mainState = newState;
-  // todo: timing stuff?
+  int i;
+
+  // State first-time entry behaviour
+  switch(mainState){
+
+    case MAIN_FINISH:
+      // Turn on all front LEDs
+      for(i = 0; i < 8; i++){
+        FA_LEDOn(i);
+      }
+
+      // Play a quick tune
+      FA_PlayNote(523,100);
+      FA_DelayMillis(100);
+      FA_PlayNote(523,100);
+      FA_DelayMillis(100);
+      FA_PlayNote(523,100);
+      FA_DelayMillis(100);
+      FA_PlayNote(659,200);
+      FA_DelayMillis(100);
+    break;
+
+  }
 }
 
 /**
@@ -22,13 +44,14 @@ void changeMainState(MainState newState){
   * and loading the robot's API
 */
 void initialize(){
-  // Loop variables - C99 :(
-  int x;
-  int y;
+  int x, y, i;
 
   // Initialize the API-specific things
   FA_RobotInit();
   FA_LCDBacklight(50);
+  for(i = 0; i < 8; i++){
+    FA_LEDOff(i);
+  };
 
   // Initialize the maze by iteratively setting its walls attributes
   for(x = 0; x < SIZE_X; x++){
@@ -53,6 +76,9 @@ void initialize(){
     maze[0][y].walls[DIR_NORTH] = true;
   }
 
+  // Set number of visited cells to 0
+  noVisitedCells = 0;
+
   // Set the current cell pointer to the current position
   currentCell = &maze[currentPosX][currentPosY];
 
@@ -68,6 +94,14 @@ void detect(){
 
   // Mark Current Cell as Visited
   currentCell->visited = true;
+  // Increment number of visited cells
+  noVisitedCells++;
+
+  // Check if all cells have been visited (crawling finished)
+  if(noVisitedCells > (SIZE_X * SIZE_Y)){
+    changeMainState(MAIN_FINISH);
+    return;
+  }
 
   // Detect all the cell's walls and update the maze model
   currentCell->walls[DIR_NORTH] = FA_ReadIR(IR_FRONT) > WALL_DIST_THRESHOLD;
@@ -97,16 +131,20 @@ void turn(){
 
   // Check if left turn is possible (PRIORITY #1)
   if(!currentCell->walls[DIR_WEST]){
-    // Turn left
+    // Turn left and update direction
+    FA_Left(TURN_DEGREE);
+    currentDirection = DIR_WEST;
 
     // Otherwise check if forward is possible (PRIORITY #2)
-  }else if(!currentCell->walls[DIR_NORTH]){
-    // Go forward
-    // Probably change state?
+  }else if(FA_ReadIR(IR_LEFT) > WALL_DIST_THRESHOLD){
+    // Update Direction
+    currentDirection = DIR_NORTH;
 
     // Right turn possible? (PRIORITY #3)
   }else if(!currentCell->walls[DIR_EAST]){
-    // Turn right
+    // Turn right and update direction
+    FA_Right(TURN_DEGREE);
+    currentDirection = DIR_EAST;
 
     // If none of the above are possible, robot is in dead end and must turn around
   }else{
@@ -123,12 +161,17 @@ void turn(){
   * Constantly check for cell changes then enact the correct behaviour
 */
 void drive(){
+  // Drive forward until entering a new cell
+  FA_SetMotors(20, 20);
 
-  // Todo when driving:
-  // * Basic reactive behaviour to stop crash
-  // * Check for floor lines (cell change)
-  //    > Update Current pos + current cell
-  //    > Change to 'detect' state
+  if(FA_ReadLine(CHANNEL_LEFT) > CELL_LINE_THRESHOLD){
+    // Stop driving and creep forward into cell
+    // todo: replace with timer?
+    FA_SetMotors(0, 0);
+    FA_Forwards(80);
+  }
+
+  changeMainState(MAIN_DETECT);
 }
 
 
@@ -136,12 +179,12 @@ void drive(){
   * The robot's behaviour when it has finished crawling the maze
   * (Some LED flashes and a buzzer sound)
 */
-void end(){
+void finish(){
 
-  // Todo to end:
-  // * Stop the robot
-  // * Play a tune
-  // * Flash some LEDs
+  // Wait for button press to restart the crawler
+  if(FA_ReadSwitch(0) > 0 || FA_ReadSwitch(1) > 0){
+    changeMainState(MAIN_START);
+  }
 }
 
 /**
@@ -174,7 +217,11 @@ int main(){
       break;
 
       case MAIN_FINISH:
-        end();
+        finish();
+      break;
+
+      case MAIN_ERROR:
+        // Do some error handling
       break;
 
       default:
@@ -182,4 +229,6 @@ int main(){
       // todo: error handling
     }
   }
+
+  return 0;
 }

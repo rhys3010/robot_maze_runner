@@ -30,10 +30,12 @@
   * SYSTEM CONSTANTS
 */
 // The IR reading distance to detect a wall
-const int WALL_DIST_THRESHOLD = 0;
+const int WALL_DIST_THRESHOLD = 600;
 // The light level reading to mark cell as nest
 const int LIGHT_LEVEL_THRESHOLD = 0;
+const int CELL_LINE_THRESHOLD = 10000;
 const int MOTOR_SPEED = 20;
+const int TURN_DEGREE = 90;
 
 /**
   * INFO VARIABLES
@@ -42,6 +44,8 @@ int currentDirection = DIR_NORTH;
 // 1 as default
 int currentPosX = 1;
 int currentPosY = 0;
+// The number of cells that the robot has visited
+int noVisitedCells = 0;
 
 /**
   * STATE MACHINE SETUP
@@ -53,6 +57,7 @@ typedef enum{
   MAIN_TURN,
   MAIN_DRIVE,
   MAIN_FINISH,
+  MAIN_ERROR,
 } MainState;
 
 
