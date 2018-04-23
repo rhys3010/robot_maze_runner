@@ -44,6 +44,31 @@ void changeMainState(MainState newState){
 }
 
 /**
+  * Temp
+*/
+void newCell(){
+  switch(currentDirection){
+    case DIR_NORTH:
+      currentPosY++;
+    break;
+
+    case DIR_EAST:
+      currentPosX++;
+    break;
+
+    case DIR_SOUTH:
+      currentPosY--;
+    break;
+
+    case DIR_WEST:
+      currentPosX--;
+    break;
+  }
+
+  changeMainState(MAIN_DETECT);
+}
+
+/**
   * Initialize the application by starting various parts of the state machine
   * and loading the robot's API
 */
