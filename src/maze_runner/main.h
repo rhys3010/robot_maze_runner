@@ -6,6 +6,8 @@
   * @version 0.1
 */
 
+#define DEBUG
+
 // Preprocessor constants for directions
 #define DIR_NORTH       0
 #define DIR_EAST        1
@@ -96,3 +98,8 @@ void detect();
 void drive();
 void turn();
 void end();
+
+/**
+  * Utility Functions
+*/
+void newCellEntered();

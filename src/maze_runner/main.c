@@ -29,7 +29,7 @@ void changeMainState(MainState newState){
         FA_LEDOn(i);
       }
 
-      // Play a quick tune
+      // Play a quick tune once
       FA_PlayNote(523,100);
       FA_DelayMillis(100);
       FA_PlayNote(523,100);
@@ -43,9 +43,14 @@ void changeMainState(MainState newState){
 }
 
 /**
-  * Temp
+  * The operations to perform when the buggy enters a new cell
+  * Print debug information to bluetooth console
+  * Update current position
+  * Update number of cells seen
 */
-void newCell(){
+void newCellEntered(){
+
+#ifdef DEBUG
 
   if(FA_BTConnected()){
     FA_BTSendString("Current Position (X Y): \n", 30);
@@ -60,6 +65,8 @@ void newCell(){
     FA_BTSendNumber(currentDirection);
     FA_BTSendString("\n", 4);
   }
+
+#endif
 
   switch(currentDirection){
     case DIR_NORTH:
@@ -210,8 +217,6 @@ void turn(){
     }
   }
 
-  FA_DelayMillis(500);
-
   // Change state to drive out of cell
   changeMainState(MAIN_DRIVE);
 }
@@ -224,12 +229,7 @@ void turn(){
 void drive(){
 
   if(FA_ReadLine(CHANNEL_LEFT) > CELL_LINE_THRESHOLD){
-    // Stop driving and creep forward into cell
-    // todo: replace with timer?
-    FA_SetMotors(0, 0);
-    FA_Forwards(140);
-    FA_PlayNote(300, 100);
-    newCell();
+    newCellEntered();
   }
 }
 
@@ -283,10 +283,6 @@ int main(){
       case MAIN_ERROR:
         // Do some error handling
       break;
-
-      default:
-        puts("Error");
-      // todo: error handling
     }
   }
 
