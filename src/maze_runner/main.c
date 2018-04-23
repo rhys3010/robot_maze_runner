@@ -19,6 +19,10 @@ void changeMainState(MainState newState){
   // State first-time entry behaviour
   switch(mainState){
 
+    case MAIN_DRIVE:
+      FA_SetMotors(MOTOR_SPEED, MOTOR_SPEED);
+    break;
+
     case MAIN_FINISH:
       // Turn on all front LEDs
       for(i = 0; i < 8; i++){
@@ -124,32 +128,47 @@ void detect(){
 */
 void turn(){
 
-  // Todo when turning:
-  // * Update Direction
-  // * Crash preventing reactive behaviours?
-  // * Turn the robot
-
   // Check if left turn is possible (PRIORITY #1)
-  if(!currentCell->walls[DIR_WEST]){
+  if(!(currentCell->walls[DIR_WEST])){
     // Turn left and update direction
     FA_Left(TURN_DEGREE);
     currentDirection = DIR_WEST;
 
     // Otherwise check if forward is possible (PRIORITY #2)
-  }else if(FA_ReadIR(IR_LEFT) > WALL_DIST_THRESHOLD){
+  }else if(!(currentCell->walls[DIR_NORTH])){
     // Update Direction
     currentDirection = DIR_NORTH;
 
     // Right turn possible? (PRIORITY #3)
-  }else if(!currentCell->walls[DIR_EAST]){
+  }else if(!(currentCell->walls[DIR_EAST])){
     // Turn right and update direction
     FA_Right(TURN_DEGREE);
     currentDirection = DIR_EAST;
 
     // If none of the above are possible, robot is in dead end and must turn around
   }else{
-    // Turn around
+    FA_Right(180);
+    // Change direction to opposite
+    switch(currentDirection){
+      case DIR_NORTH:
+        currentDirection = DIR_SOUTH;
+      break;
+
+      case DIR_EAST:
+        currentDirection = DIR_WEST;
+      break;
+
+      case DIR_SOUTH:
+        currentDirection = DIR_NORTH;
+      break;
+
+      case DIR_WEST:
+        currentDirection = DIR_EAST;
+      break;
+    }
   }
+
+  FA_DelayMillis(500);
 
   // Change state to drive out of cell
   changeMainState(MAIN_DRIVE);
@@ -161,17 +180,15 @@ void turn(){
   * Constantly check for cell changes then enact the correct behaviour
 */
 void drive(){
-  // Drive forward until entering a new cell
-  FA_SetMotors(20, 20);
 
   if(FA_ReadLine(CHANNEL_LEFT) > CELL_LINE_THRESHOLD){
     // Stop driving and creep forward into cell
     // todo: replace with timer?
     FA_SetMotors(0, 0);
-    FA_Forwards(80);
+    FA_Forwards(140);
+    FA_PlayNote(300, 100);
+    changeMainState(MAIN_DETECT);
   }
-
-  changeMainState(MAIN_DETECT);
 }
 
 
@@ -197,6 +214,7 @@ int main(){
 
   // Main Loop
   while(1){
+
     // Check state and behave accordingly
     switch(mainState){
 

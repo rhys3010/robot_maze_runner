@@ -30,12 +30,12 @@
   * SYSTEM CONSTANTS
 */
 // The IR reading distance to detect a wall
-const int WALL_DIST_THRESHOLD = 600;
+const int WALL_DIST_THRESHOLD = 200;
 // The light level reading to mark cell as nest
 const int LIGHT_LEVEL_THRESHOLD = 0;
-const int CELL_LINE_THRESHOLD = 10000;
-const int MOTOR_SPEED = 20;
-const int TURN_DEGREE = 90;
+const int CELL_LINE_THRESHOLD = 500;
+const int MOTOR_SPEED = 10;
+const int TURN_DEGREE = 85;
 
 /**
   * INFO VARIABLES
