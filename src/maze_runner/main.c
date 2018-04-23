@@ -39,7 +39,6 @@ void changeMainState(MainState newState){
       FA_PlayNote(659,200);
       FA_DelayMillis(100);
     break;
-
   }
 }
 
@@ -47,7 +46,6 @@ void changeMainState(MainState newState){
   * Temp
 */
 void newCell(){
-
 
   if(FA_BTConnected()){
     FA_BTSendString("Current Position (X Y): \n", 30);
@@ -57,6 +55,9 @@ void newCell(){
     FA_BTSendString("\n", 4);
     FA_BTSendString("Cells Visited: \n", 30);
     FA_BTSendNumber(noVisitedCells);
+    FA_BTSendString("\n", 4);
+    FA_BTSendString("Current Direction: \n", 30);
+    FA_BTSendNumber(currentDirection);
     FA_BTSendString("\n", 4);
   }
 
