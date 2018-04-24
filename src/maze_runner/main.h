@@ -3,7 +3,7 @@
   * Explore a maze using a combination of reactive and deliberative behaviours, using
   * FSMs to implement a left wall following system and detect/store information about given cells.
   * @author Rhys Evans (rhe24@aber.ac.uk)
-  * @version 0.1
+  * @version 0.3
 */
 
 #define DEBUG
@@ -32,7 +32,7 @@
   * SYSTEM CONSTANTS
 */
 // The IR reading distance to detect a wall
-const int WALL_DIST_THRESHOLD = 200;
+const int WALL_DIST_THRESHOLD = 300;
 // The light level reading to mark cell as nest
 const int LIGHT_LEVEL_THRESHOLD = 0;
 const int CELL_LINE_THRESHOLD = 500;

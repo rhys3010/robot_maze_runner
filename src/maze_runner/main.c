@@ -3,7 +3,7 @@
   * Explore a maze using a combination of reactive and deliberative behaviours, using
   * FSMs to implement a left wall following system and detect/store information about given cells.
   * @author Rhys Evans (rhe24@aber.ac.uk)
-  * @version 0.1
+  * @version 0.3
 */
 #include "allcode_api.h"
 #include "main.h"
@@ -52,22 +52,26 @@ void newCellEntered(){
 
 #ifdef DEBUG
 
+  // Log debug info to bluetooth console
   if(FA_BTConnected()){
+    FA_BTSendString("============================", 30);
     FA_BTSendString("Current Position (X Y): \n", 30);
     FA_BTSendNumber(currentPosX);
-    FA_BTSendString("\n", 4);
+    FA_BTSendString(" , ", 4);
     FA_BTSendNumber(currentPosY);
     FA_BTSendString("\n", 4);
-    FA_BTSendString("Cells Visited: \n", 30);
+    FA_BTSendString("Cells Visited: ", 30);
     FA_BTSendNumber(noVisitedCells);
     FA_BTSendString("\n", 4);
-    FA_BTSendString("Current Direction: \n", 30);
+    FA_BTSendString("Current Direction: ", 30);
     FA_BTSendNumber(currentDirection);
     FA_BTSendString("\n", 4);
+    FA_BTSendString("============================", 30);
   }
 
 #endif
 
+  // Update position of the buggy based on its direction of travel
   switch(currentDirection){
     case DIR_NORTH:
       currentPosY++;
@@ -88,10 +92,11 @@ void newCellEntered(){
 
   currentCell = &maze[currentPosX][currentPosY];
 
-  // Mark Current Cell as Visited
-  currentCell->visited = true;
-  // Increment number of visited cells
-  noVisitedCells++;
+  // Update visited flag and increment visited cells
+  if(!currentCell->visited){
+    currentCell->Visited = true;
+    noVisitedCells++;
+  }
 
   changeMainState(MAIN_DETECT);
 }
@@ -104,7 +109,6 @@ void initialize(){
   int x, y, i;
 
   // Initialize the API-specific things
-  FA_RobotInit();
   FA_LCDBacklight(50);
   for(i = 0; i < 8; i++){
     FA_LEDOff(i);
@@ -196,7 +200,7 @@ void turn(){
 
     // If none of the above are possible, robot is in dead end and must turn around
   }else{
-    FA_Right(180);
+    FA_Right(TURN_DEGREE*2);
     // Change direction to opposite
     switch(currentDirection){
       case DIR_NORTH:
@@ -251,6 +255,8 @@ void finish(){
   * system and invokes the relevant behaviour
 */
 int main(){
+  // Intialize the API one time only
+  FA_RobotInit();
   // Initialize the State Machine
   mainState = MAIN_START;
 
