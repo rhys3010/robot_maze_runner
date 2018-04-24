@@ -13,17 +13,24 @@
   * Change the system's main state and perform necessary actions
 */
 void changeMainState(MainState newState){
+  FA_DelayMillis(500);
   mainState = newState;
   int i;
 
   // State first-time entry behaviour
+  // Code that only needs to be executed once on entry into the state
   switch(mainState){
 
     case MAIN_DRIVE:
       FA_SetMotors(MOTOR_SPEED, MOTOR_SPEED);
     break;
 
+    case MAIN_DETECT:
+    break;
+
     case MAIN_FINISH:
+      FA_SetMotors(0, 0);
+
       // Turn on all front LEDs
       for(i = 0; i < 8; i++){
         FA_LEDOn(i);
@@ -43,6 +50,22 @@ void changeMainState(MainState newState){
 }
 
 /**
+  * Implements the reactive behaviour of the robot to correct its position when turning and entering a new cell
+*/
+void avoidObstacle(){
+  if(FA_ReadIR(IR_FRONT) > CRASH_THRESHOLD){
+  }
+
+  if(FA_ReadIR(IR_LEFT) > CRASH_THRESHOLD){
+    FA_Right(5);
+  }
+
+  if(FA_ReadIR(IR_RIGHT) > CRASH_THRESHOLD){
+    FA_Left(5);
+  }
+}
+
+/**
   * The operations to perform when the buggy enters a new cell
   * Print debug information to bluetooth console
   * Update current position
@@ -54,7 +77,7 @@ void newCellEntered(){
 
   // Log debug info to bluetooth console
   if(FA_BTConnected()){
-    FA_BTSendString("============================", 30);
+    FA_BTSendString("============================ \n", 30);
     FA_BTSendString("Current Position (X Y): \n", 30);
     FA_BTSendNumber(currentPosX);
     FA_BTSendString(" , ", 4);
@@ -66,7 +89,14 @@ void newCellEntered(){
     FA_BTSendString("Current Direction: ", 30);
     FA_BTSendNumber(currentDirection);
     FA_BTSendString("\n", 4);
-    FA_BTSendString("============================", 30);
+    FA_BTSendString("---------------------------- \n", 30);
+    FA_BTSendString("Walls: ", 30);
+    FA_BTSendNumber(currentCell->walls[0]);
+    FA_BTSendNumber(currentCell->walls[1]);
+    FA_BTSendNumber(currentCell->walls[2]);
+    FA_BTSendNumber(currentCell->walls[3]);
+    FA_BTSendString("============================ \n", 30);
+
   }
 
 #endif
@@ -94,7 +124,7 @@ void newCellEntered(){
 
   // Update visited flag and increment visited cells
   if(!currentCell->visited){
-    currentCell->Visited = true;
+    currentCell->visited = true;
     noVisitedCells++;
   }
 
@@ -184,7 +214,7 @@ void turn(){
   // Check if left turn is possible (PRIORITY #1)
   if(!(currentCell->walls[DIR_WEST])){
     // Turn left and update direction
-    FA_Left(TURN_DEGREE);
+    FA_Left(TURN_DEGREE-3);
     currentDirection = DIR_WEST;
 
     // Otherwise check if forward is possible (PRIORITY #2)
@@ -231,8 +261,9 @@ void turn(){
   * Constantly check for cell changes then enact the correct behaviour
 */
 void drive(){
-
-  if(FA_ReadLine(CHANNEL_LEFT) > CELL_LINE_THRESHOLD){
+  if(FA_ReadLine(CHANNEL_LEFT) < CELL_LINE_THRESHOLD || FA_ReadLine(CHANNEL_RIGHT) < CELL_LINE_THRESHOLD){
+    FA_SetMotors(0, 0);
+    FA_Forwards(100);
     newCellEntered();
   }
 }
@@ -262,6 +293,7 @@ int main(){
 
   // Main Loop
   while(1){
+    //avoidObstacle();
 
     // Check state and behave accordingly
     switch(mainState){
@@ -286,8 +318,10 @@ int main(){
         finish();
       break;
 
-      case MAIN_ERROR:
-        // Do some error handling
+      case MAIN_DEBUG:
+        FA_BTSendNumber(FA_ReadLine(CHANNEL_LEFT));
+        FA_BTSendString("\n", 5);
+        FA_DelayMillis(1000);
       break;
     }
   }

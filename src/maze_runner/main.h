@@ -32,15 +32,17 @@
   * SYSTEM CONSTANTS
 */
 // The IR reading distance to detect a wall
-const int WALL_DIST_THRESHOLD = 300;
+const int WALL_DIST_THRESHOLD = 100;
 // The light level reading to mark cell as nest
 const int LIGHT_LEVEL_THRESHOLD = 0;
-const int CELL_LINE_THRESHOLD = 500;
+// The line reading to mark a new cell
+const int CELL_LINE_THRESHOLD = 50;
 const int MOTOR_SPEED = 10;
-const int TURN_DEGREE = 85;
+const int TURN_DEGREE = 90;
+const int CRASH_THRESHOLD = 700;
 
 /**
-  * INFO VARIABLES
+  * SYSTEM INFO VARIABLES
 */
 int currentDirection = DIR_NORTH;
 // 1 as default
@@ -59,7 +61,7 @@ typedef enum{
   MAIN_TURN,
   MAIN_DRIVE,
   MAIN_FINISH,
-  MAIN_ERROR,
+  MAIN_DEBUG,
 } MainState;
 
 
@@ -102,4 +104,5 @@ void end();
 /**
   * Utility Functions
 */
+void avoidObstacle();
 void newCellEntered();
