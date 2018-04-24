@@ -32,14 +32,14 @@
   * SYSTEM CONSTANTS
 */
 // The IR reading distance to detect a wall
-const int WALL_DIST_THRESHOLD = 100;
+const int WALL_DIST_THRESHOLD = 50;
 // The light level reading to mark cell as nest
-const int LIGHT_LEVEL_THRESHOLD = 0;
+const int LIGHT_LEVEL_THRESHOLD = 200;
 // The line reading to mark a new cell
 const int CELL_LINE_THRESHOLD = 50;
-const int MOTOR_SPEED = 10;
-const int TURN_DEGREE = 90;
-const int CRASH_THRESHOLD = 700;
+const int MOTOR_SPEED = 20;
+const int TURN_DEGREE = 85;
+const int CRASH_THRESHOLD = 900;
 const int MAZE_DRAW_LENGTH = 28;
 const int MAZE_DRAW_WIDTH = 28;
 const int MAZE_DRAW_CELL_LENGTH = 7;
@@ -65,7 +65,6 @@ typedef enum{
   MAIN_TURN,
   MAIN_DRIVE,
   MAIN_FINISH,
-  MAIN_DEBUG,
 } MainState;
 
 
@@ -111,3 +110,4 @@ void end();
 void avoidObstacle();
 void newCellEntered();
 void drawMaze();
+void printDebugStream();

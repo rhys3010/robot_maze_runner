@@ -22,7 +22,6 @@ void changeMainState(MainState newState){
   switch(mainState){
 
     case MAIN_DRIVE:
-      FA_SetMotors(MOTOR_SPEED, MOTOR_SPEED);
     break;
 
     case MAIN_DETECT:
@@ -54,28 +53,24 @@ void changeMainState(MainState newState){
 */
 void avoidObstacle(){
   if(FA_ReadIR(IR_FRONT) > CRASH_THRESHOLD){
+    FA_Backwards(10);
   }
 
-  if(FA_ReadIR(IR_LEFT) > CRASH_THRESHOLD){
-    FA_Right(5);
+  if(FA_ReadIR(IR_LEFT) > CRASH_THRESHOLD || FA_ReadIR(IR_FRONT_LEFT) > CRASH_THRESHOLD){
+    FA_Right(2);
   }
 
-  if(FA_ReadIR(IR_RIGHT) > CRASH_THRESHOLD){
-    FA_Left(5);
+  if(FA_ReadIR(IR_RIGHT) > CRASH_THRESHOLD || FA_ReadIR(IR_FRONT_LEFT) > CRASH_THRESHOLD){
+    FA_Left(2);
   }
 }
 
 /**
-  * The operations to perform when the buggy enters a new cell
-  * Print debug information to bluetooth console
-  * Update current position
-  * Update number of cells seen
+  * Send system information over bluetooth
+  * for debugging.
 */
-void newCellEntered(){
+void printDebugStream(){
 
-#ifdef DEBUG
-
-  // Log debug info to bluetooth console
   if(FA_BTConnected()){
     FA_BTSendString("============================ \n", 30);
     FA_BTSendString("Current Position (X Y): \n", 30);
@@ -95,11 +90,19 @@ void newCellEntered(){
     FA_BTSendNumber(currentCell->walls[1]);
     FA_BTSendNumber(currentCell->walls[2]);
     FA_BTSendNumber(currentCell->walls[3]);
+    FA_BTSendString("\n", 4);
+
     FA_BTSendString("============================ \n", 30);
-
   }
+}
 
-#endif
+/**
+  * The operations to perform when the buggy enters a new cell
+  * Print debug information to bluetooth console
+  * Update current position
+  * Update number of cells seen
+*/
+void newCellEntered(){
 
   // Update position of the buggy based on its direction of travel
   switch(currentDirection){
@@ -127,6 +130,11 @@ void newCellEntered(){
     currentCell->visited = true;
     noVisitedCells++;
   }
+
+  drawMaze();
+#ifdef DEBUG
+  printDebugStream();
+#endif
 
   changeMainState(MAIN_DETECT);
 }
@@ -213,16 +221,16 @@ void initialize(){
     }
   }
 
-
   // Set number of visited cells to 0
   noVisitedCells = 0;
 
   // Set the current cell pointer to the current position
   currentCell = &maze[currentPosX][currentPosY];
 
+  drawMaze();
 
   // Move to the next state...
-  changeMainState(MAIN_DEBUG);
+  changeMainState(MAIN_DETECT);
 }
 
 /**
@@ -231,6 +239,11 @@ void initialize(){
 */
 void detect(){
 
+  int front = currentDirection;
+  int left = ((currentDirection-1) % 4 + 4) % 4;
+  int rear = ((currentDirection+2) % 4 + 4) % 4;
+  int right = ((currentDirection+1) % 4 + 4) % 4;
+
   // Check if all cells have been visited (crawling finished)
   if(noVisitedCells > (SIZE_X * SIZE_Y)){
     changeMainState(MAIN_FINISH);
@@ -238,10 +251,38 @@ void detect(){
   }
 
   // Detect all the cell's walls and update the maze model
-  currentCell->walls[DIR_NORTH] = FA_ReadIR(IR_FRONT) > WALL_DIST_THRESHOLD;
-  currentCell->walls[DIR_EAST]  = FA_ReadIR(IR_RIGHT) > WALL_DIST_THRESHOLD;
-  currentCell->walls[DIR_SOUTH] = FA_ReadIR(IR_REAR) > WALL_DIST_THRESHOLD;
-  currentCell->walls[DIR_WEST]  = FA_ReadIR(IR_LEFT) > WALL_DIST_THRESHOLD;
+  // Directions are relative depending on the way the robot is facing, so check that first.
+  switch(currentDirection){
+    case DIR_NORTH:
+      currentCell->walls[DIR_NORTH] = FA_ReadIR(IR_FRONT) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_EAST]  = FA_ReadIR(IR_RIGHT) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_SOUTH] = FA_ReadIR(IR_REAR) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_WEST]  = FA_ReadIR(IR_LEFT) > WALL_DIST_THRESHOLD;
+    break;
+
+    case DIR_EAST:
+      currentCell->walls[DIR_NORTH] = FA_ReadIR(IR_LEFT) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_EAST]  = FA_ReadIR(IR_FRONT) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_SOUTH] = FA_ReadIR(IR_RIGHT) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_WEST]  = FA_ReadIR(IR_REAR) > WALL_DIST_THRESHOLD;
+    break;
+
+    case DIR_SOUTH:
+      currentCell->walls[DIR_NORTH] = FA_ReadIR(IR_REAR) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_EAST]  = FA_ReadIR(IR_LEFT) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_SOUTH] = FA_ReadIR(IR_FRONT) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_WEST]  = FA_ReadIR(IR_RIGHT) > WALL_DIST_THRESHOLD;
+    break;
+
+    case DIR_WEST:
+      currentCell->walls[DIR_NORTH] = FA_ReadIR(IR_RIGHT) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_EAST]  = FA_ReadIR(IR_REAR) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_SOUTH] = FA_ReadIR(IR_LEFT) > WALL_DIST_THRESHOLD;
+      currentCell->walls[DIR_WEST]  = FA_ReadIR(IR_FRONT) > WALL_DIST_THRESHOLD;
+
+    break;
+
+  }
 
   // Detect Light Level in the cell to check for nest then update model
   if(FA_ReadLight() < LIGHT_LEVEL_THRESHOLD){
@@ -258,44 +299,44 @@ void detect(){
 */
 void turn(){
 
+  // Get headingings dynamically from the compass using modulo
+  int front = currentDirection;
+  int left = ((currentDirection-1) % 4 + 4) % 4;
+  int rear = ((currentDirection+2) % 4 + 4) % 4;
+  int right = ((currentDirection+1) % 4 + 4) % 4;
+
+
   // Check if left turn is possible (PRIORITY #1)
-  if(!(currentCell->walls[DIR_WEST])){
+  if(!(currentCell->walls[left])){
     // Turn left and update direction
-    FA_Left(TURN_DEGREE-3);
-    currentDirection = DIR_WEST;
+    FA_Left(TURN_DEGREE);
+    currentDirection = left;
 
     // Otherwise check if forward is possible (PRIORITY #2)
-  }else if(!(currentCell->walls[DIR_NORTH])){
-    // Update Direction
-    currentDirection = DIR_NORTH;
+  }else if(!(currentCell->walls[currentDirection])){
+    // Do nothing
 
     // Right turn possible? (PRIORITY #3)
-  }else if(!(currentCell->walls[DIR_EAST])){
+  }else if(!(currentCell->walls[right])){
     // Turn right and update direction
     FA_Right(TURN_DEGREE);
-    currentDirection = DIR_EAST;
+    currentDirection = right;
 
     // If none of the above are possible, robot is in dead end and must turn around
   }else{
-    FA_Right(TURN_DEGREE*2);
-    // Change direction to opposite
-    switch(currentDirection){
-      case DIR_NORTH:
-        currentDirection = DIR_SOUTH;
-      break;
 
-      case DIR_EAST:
-        currentDirection = DIR_WEST;
-      break;
-
-      case DIR_SOUTH:
-        currentDirection = DIR_NORTH;
-      break;
-
-      case DIR_WEST:
-        currentDirection = DIR_EAST;
-      break;
+    /**
+      * Check which side is closest to the wall
+      * and turn the opposite direction to avoid scraping
+    */
+    if(FA_ReadIR(CHANNEL_LEFT) > FA_ReadIR(CHANNEL_RIGHT)){
+      FA_Right(TURN_DEGREE*2);
+    }else{
+      FA_Right(TURN_DEGREE*2);
     }
+
+    // Update direction to rear
+    currentDirection = rear;
   }
 
   // Change state to drive out of cell
@@ -308,9 +349,11 @@ void turn(){
   * Constantly check for cell changes then enact the correct behaviour
 */
 void drive(){
+  FA_SetMotors(MOTOR_SPEED, MOTOR_SPEED);
+
   if(FA_ReadLine(CHANNEL_LEFT) < CELL_LINE_THRESHOLD || FA_ReadLine(CHANNEL_RIGHT) < CELL_LINE_THRESHOLD){
+    FA_DelayMillis(400);
     FA_SetMotors(0, 0);
-    FA_Forwards(100);
     newCellEntered();
   }
 }
@@ -350,6 +393,7 @@ int main(){
 
       case MAIN_DETECT:
         detect();
+        avoidObstacle();
       break;
 
       case MAIN_TURN:
@@ -358,46 +402,11 @@ int main(){
 
       case MAIN_DRIVE:
         drive();
+        avoidObstacle();
       break;
 
       case MAIN_FINISH:
         finish();
-      break;
-
-      case MAIN_DEBUG:
-        currentPosX = 3;
-        currentPosY = 3;
-
-        maze[0][0].walls[DIR_EAST] = true;
-        maze[1][0].walls[DIR_WEST] = true;
-        maze[2][0].walls[DIR_EAST] = true;
-        maze[2][0].walls[DIR_NORTH] = true;
-        maze[3][0].walls[DIR_WEST] = true;
-
-        maze[1][1].walls[DIR_NORTH] = true;
-        maze[1][1].walls[DIR_EAST] = true;
-
-        maze[2][1].walls[DIR_NORTH] = true;
-        maze[2][1].walls[DIR_WEST] = true;
-        maze[2][1].walls[DIR_SOUTH] = true;
-
-        maze[0][2].walls[DIR_NORTH] = true;
-
-        maze[1][2].walls[DIR_NORTH] = true;
-        maze[1][2].walls[DIR_SOUTH] = true;
-
-        maze[2][2].walls[DIR_SOUTH] = true;
-        maze[2][2].walls[DIR_EAST] = true;
-
-        maze[3][2].walls[DIR_WEST] = true;
-
-        maze[0][3].walls[DIR_SOUTH] = true;
-
-        maze[1][3].walls[DIR_SOUTH] = true;
-
-        FA_DelayMillis(1000);
-        drawMaze();
-
       break;
     }
   }
