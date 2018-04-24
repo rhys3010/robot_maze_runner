@@ -3,7 +3,7 @@
   * Explore a maze using a combination of reactive and deliberative behaviours, using
   * FSMs to implement a left wall following system and detect/store information about given cells.
   * @author Rhys Evans (rhe24@aber.ac.uk)
-  * @version 0.3
+  * @version 1.0
 */
 #include "allcode_api.h"
 #include "main.h"
@@ -172,7 +172,7 @@ void drawMaze(){
         FA_LCDPlot((x * MAZE_DRAW_CELL_WIDTH) + 3, (MAZE_DRAW_CELL_LENGTH * ((SIZE_Y - y) - 1) + 5));
       }
 
-      // DRAW CELL WALLS
+      // DRAW CELL WALLS ON X AXIS
       for(i = (x * MAZE_DRAW_CELL_WIDTH); i < (x * MAZE_DRAW_CELL_WIDTH) + MAZE_DRAW_CELL_WIDTH; i++){
         if(maze[x][y].walls[DIR_NORTH]){
           FA_LCDPlot(i, MAZE_DRAW_CELL_LENGTH * ((SIZE_Y - y) - 1));
@@ -183,6 +183,7 @@ void drawMaze(){
         }
       }
 
+      // DRAW CELL WALLS Y AXIS
       for(i = (MAZE_DRAW_CELL_LENGTH * ((SIZE_Y - y) - 1)); i < (MAZE_DRAW_CELL_LENGTH * (SIZE_Y - y)); i++){
         if(maze[x][y].walls[DIR_EAST]){
           FA_LCDPlot((x * MAZE_DRAW_CELL_WIDTH) + MAZE_DRAW_CELL_WIDTH, i);
@@ -305,6 +306,19 @@ void turn(){
   int rear = ((currentDirection+2) % 4 + 4) % 4;
   int right = ((currentDirection+1) % 4 + 4) % 4;
 
+  // If cell is the nest, no need to decide simply turn around
+  if(currentCell == nestCell){
+
+    // Choose Best direction to turn around based on vicinity to wall
+    if(FA_ReadIR(CHANNEL_LEFT) > FA_ReadIR(CHANNEL_RIGHT)){
+      FA_Right(TURN_DEGREE*2);
+    }else{
+      FA_Left(TURN_DEGREE*2);
+    }
+    changeMainState(MAIN_DRIVE);
+    return;
+  }
+
 
   // Check if left turn is possible (PRIORITY #1)
   if(!(currentCell->walls[left])){
@@ -332,7 +346,7 @@ void turn(){
     if(FA_ReadIR(CHANNEL_LEFT) > FA_ReadIR(CHANNEL_RIGHT)){
       FA_Right(TURN_DEGREE*2);
     }else{
-      FA_Right(TURN_DEGREE*2);
+      FA_Left(TURN_DEGREE*2);
     }
 
     // Update direction to rear
@@ -351,6 +365,7 @@ void turn(){
 void drive(){
   FA_SetMotors(MOTOR_SPEED, MOTOR_SPEED);
 
+  // When buggy enters a new cell creep into the middle, then stops and updates state.
   if(FA_ReadLine(CHANNEL_LEFT) < CELL_LINE_THRESHOLD || FA_ReadLine(CHANNEL_RIGHT) < CELL_LINE_THRESHOLD){
     FA_DelayMillis(400);
     FA_SetMotors(0, 0);
@@ -393,7 +408,6 @@ int main(){
 
       case MAIN_DETECT:
         detect();
-        avoidObstacle();
       break;
 
       case MAIN_TURN:

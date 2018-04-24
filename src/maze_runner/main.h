@@ -3,7 +3,7 @@
   * Explore a maze using a combination of reactive and deliberative behaviours, using
   * FSMs to implement a left wall following system and detect/store information about given cells.
   * @author Rhys Evans (rhe24@aber.ac.uk)
-  * @version 0.3
+  * @version 1.0
 */
 
 #define DEBUG
