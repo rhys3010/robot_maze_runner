@@ -132,6 +132,63 @@ void newCellEntered(){
 }
 
 /**
+  * Draw and update a representation of the maze to the
+  * Buggy's LCD screen
+  * Maze is represented by a 28x28 grid of 7x7 cells
+*/
+void drawMaze(){
+  int x, y, i;
+  FA_LCDClear();
+
+  // Draw Maze Border
+  for(x = 0; x < MAZE_DRAW_WIDTH; x++){
+    for(y = 0; y < MAZE_DRAW_LENGTH; y++){
+      // Draw Maze Border
+      FA_LCDPlot(x, 0);
+      FA_LCDPlot(x, MAZE_DRAW_WIDTH);
+      FA_LCDPlot(0, y);
+      FA_LCDPlot(MAZE_DRAW_LENGTH, y);
+    }
+  }
+
+  /**
+    * Iterate over the 2d maze array and draw all the walls of each cell
+    * The logic below is a bit in-depth, due to the fact that the LCD screen draws with 0,0
+    * at the top left, but my maze array has 0,0 as bottom left.
+  */
+  for(x = 0; x < SIZE_X; x++){
+    for(y = 0; y < SIZE_Y; y++){
+
+      // DRAW ROBOT POSITION
+      if(x == currentPosX && y == currentPosY){
+        FA_LCDPlot((x * MAZE_DRAW_CELL_WIDTH) + 3, (MAZE_DRAW_CELL_LENGTH * ((SIZE_Y - y) - 1) + 5));
+      }
+
+      // DRAW CELL WALLS
+      for(i = (x * MAZE_DRAW_CELL_WIDTH); i < (x * MAZE_DRAW_CELL_WIDTH) + MAZE_DRAW_CELL_WIDTH; i++){
+        if(maze[x][y].walls[DIR_NORTH]){
+          FA_LCDPlot(i, MAZE_DRAW_CELL_LENGTH * ((SIZE_Y - y) - 1));
+        }
+
+        if(maze[x][y].walls[DIR_SOUTH]){
+          FA_LCDPlot(i, MAZE_DRAW_CELL_LENGTH * (SIZE_Y - y));
+        }
+      }
+
+      for(i = (MAZE_DRAW_CELL_LENGTH * ((SIZE_Y - y) - 1)); i < (MAZE_DRAW_CELL_LENGTH * (SIZE_Y - y)); i++){
+        if(maze[x][y].walls[DIR_EAST]){
+          FA_LCDPlot((x * MAZE_DRAW_CELL_WIDTH) + MAZE_DRAW_CELL_WIDTH, i);
+        }
+
+        if(maze[x][y].walls[DIR_WEST]){
+          FA_LCDPlot((x * MAZE_DRAW_CELL_WIDTH), i);
+        }
+      }
+    }
+  }
+}
+
+/**
   * Initialize the application by starting various parts of the state machine
   * and loading the robot's API
 */
@@ -156,16 +213,6 @@ void initialize(){
     }
   }
 
-  // Construct the left + right border walls
-  for(x = 0; x < SIZE_X; x++){
-    maze[x][0].walls[DIR_WEST] = true;
-    maze[x][SIZE_X - 1].walls[DIR_EAST] = true;
-  }
-
-  for(y = 0; y < SIZE_Y; y++){
-    maze[SIZE_Y - 1][y].walls[DIR_SOUTH] = true;
-    maze[0][y].walls[DIR_NORTH] = true;
-  }
 
   // Set number of visited cells to 0
   noVisitedCells = 0;
@@ -175,7 +222,7 @@ void initialize(){
 
 
   // Move to the next state...
-  changeMainState(MAIN_DETECT);
+  changeMainState(MAIN_DEBUG);
 }
 
 /**
@@ -293,7 +340,6 @@ int main(){
 
   // Main Loop
   while(1){
-    //avoidObstacle();
 
     // Check state and behave accordingly
     switch(mainState){
@@ -319,9 +365,39 @@ int main(){
       break;
 
       case MAIN_DEBUG:
-        FA_BTSendNumber(FA_ReadLine(CHANNEL_LEFT));
-        FA_BTSendString("\n", 5);
+        currentPosX = 3;
+        currentPosY = 3;
+
+        maze[0][0].walls[DIR_EAST] = true;
+        maze[1][0].walls[DIR_WEST] = true;
+        maze[2][0].walls[DIR_EAST] = true;
+        maze[2][0].walls[DIR_NORTH] = true;
+        maze[3][0].walls[DIR_WEST] = true;
+
+        maze[1][1].walls[DIR_NORTH] = true;
+        maze[1][1].walls[DIR_EAST] = true;
+
+        maze[2][1].walls[DIR_NORTH] = true;
+        maze[2][1].walls[DIR_WEST] = true;
+        maze[2][1].walls[DIR_SOUTH] = true;
+
+        maze[0][2].walls[DIR_NORTH] = true;
+
+        maze[1][2].walls[DIR_NORTH] = true;
+        maze[1][2].walls[DIR_SOUTH] = true;
+
+        maze[2][2].walls[DIR_SOUTH] = true;
+        maze[2][2].walls[DIR_EAST] = true;
+
+        maze[3][2].walls[DIR_WEST] = true;
+
+        maze[0][3].walls[DIR_SOUTH] = true;
+
+        maze[1][3].walls[DIR_SOUTH] = true;
+
         FA_DelayMillis(1000);
+        drawMaze();
+
       break;
     }
   }

@@ -40,6 +40,10 @@ const int CELL_LINE_THRESHOLD = 50;
 const int MOTOR_SPEED = 10;
 const int TURN_DEGREE = 90;
 const int CRASH_THRESHOLD = 700;
+const int MAZE_DRAW_LENGTH = 28;
+const int MAZE_DRAW_WIDTH = 28;
+const int MAZE_DRAW_CELL_LENGTH = 7;
+const int MAZE_DRAW_CELL_WIDTH = 7;
 
 /**
   * SYSTEM INFO VARIABLES
@@ -106,3 +110,4 @@ void end();
 */
 void avoidObstacle();
 void newCellEntered();
+void drawMaze();
