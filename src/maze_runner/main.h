@@ -6,6 +6,7 @@
   * @version 1.0
 */
 
+// Simpy comment out the below line to stop bluetooth debug transmissions
 #define DEBUG
 
 // Preprocessor constants for directions
@@ -39,7 +40,9 @@ const int LIGHT_LEVEL_THRESHOLD = 200;
 const int CELL_LINE_THRESHOLD = 50;
 const int MOTOR_SPEED = 20;
 const int TURN_DEGREE = 85;
+// The IR Reading threshold for reactive behaviour
 const int CRASH_THRESHOLD = 900;
+// Maze Drawing Constants
 const int MAZE_DRAW_LENGTH = 28;
 const int MAZE_DRAW_WIDTH = 28;
 const int MAZE_DRAW_CELL_LENGTH = 7;

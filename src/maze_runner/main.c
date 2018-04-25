@@ -13,6 +13,8 @@
   * Change the system's main state and perform necessary actions
 */
 void changeMainState(MainState newState){
+  // Standard 500ms delay between each state to allow sensors to
+  // settle etc.
   FA_DelayMillis(500);
   mainState = newState;
   int i;
@@ -49,12 +51,17 @@ void changeMainState(MainState newState){
 }
 
 /**
-  * Implements the reactive behaviour of the robot to correct its position when turning and entering a new cell
+  * Implements the reactive behaviour of the robot to correct its position
+  * when turning and entering a new cell.
 */
 void avoidObstacle(){
+  // If there's an obstacle ahead, reverse slightly to correct position
   if(FA_ReadIR(IR_FRONT) > CRASH_THRESHOLD){
     FA_Backwards(10);
   }
+
+  // If there is an obstacle on either the left or right side of the robot
+  // correct accordingly
 
   if(FA_ReadIR(IR_LEFT) > CRASH_THRESHOLD || FA_ReadIR(IR_FRONT_LEFT) > CRASH_THRESHOLD){
     FA_Right(2);
@@ -67,7 +74,7 @@ void avoidObstacle(){
 
 /**
   * Send system information over bluetooth
-  * for debugging.
+  * for debugging purposes.
 */
 void printDebugStream(){
 
@@ -91,7 +98,6 @@ void printDebugStream(){
     FA_BTSendNumber(currentCell->walls[2]);
     FA_BTSendNumber(currentCell->walls[3]);
     FA_BTSendString("\n", 4);
-
     FA_BTSendString("============================ \n", 30);
   }
 }
@@ -105,6 +111,7 @@ void printDebugStream(){
 void newCellEntered(){
 
   // Update position of the buggy based on its direction of travel
+  // Could simplify this switch block but it would obfuscate the code drastically
   switch(currentDirection){
     case DIR_NORTH:
       currentPosY++;
@@ -131,6 +138,7 @@ void newCellEntered(){
     noVisitedCells++;
   }
 
+  // Update maze representation
   drawMaze();
 #ifdef DEBUG
   printDebugStream();
@@ -161,7 +169,7 @@ void drawMaze(){
 
   /**
     * Iterate over the 2d maze array and draw all the walls of each cell
-    * The logic below is a bit in-depth, due to the fact that the LCD screen draws with 0,0
+    * The logic below is a bit complicated in parts, due to the fact that the LCD screen draws with 0,0
     * at the top left, but my maze array has 0,0 as bottom left.
   */
   for(x = 0; x < SIZE_X; x++){
@@ -199,7 +207,7 @@ void drawMaze(){
 
 /**
   * Initialize the application by starting various parts of the state machine
-  * and loading the robot's API
+  * and preparing the maze model
 */
 void initialize(){
   int x, y, i;
@@ -228,6 +236,7 @@ void initialize(){
   // Set the current cell pointer to the current position
   currentCell = &maze[currentPosX][currentPosY];
 
+  // Draw maze in initial state.
   drawMaze();
 
   // Move to the next state...
@@ -300,13 +309,13 @@ void detect(){
 */
 void turn(){
 
-  // Get headingings dynamically from the compass using modulo
+  // Get headingings dynamically from the compass using modulus
   int front = currentDirection;
   int left = ((currentDirection-1) % 4 + 4) % 4;
   int rear = ((currentDirection+2) % 4 + 4) % 4;
   int right = ((currentDirection+1) % 4 + 4) % 4;
 
-  // If cell is the nest, no need to decide simply turn around
+  // If cell is the nest, no need to decide simply turn around and advance state
   if(currentCell == nestCell){
 
     // Choose Best direction to turn around based on vicinity to wall
@@ -367,6 +376,7 @@ void drive(){
 
   // When buggy enters a new cell creep into the middle, then stops and updates state.
   if(FA_ReadLine(CHANNEL_LEFT) < CELL_LINE_THRESHOLD || FA_ReadLine(CHANNEL_RIGHT) < CELL_LINE_THRESHOLD){
+    // Delay for a small period to allow the buggy to creep into the cell
     FA_DelayMillis(400);
     FA_SetMotors(0, 0);
     newCellEntered();
