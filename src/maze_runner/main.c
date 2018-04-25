@@ -60,7 +60,7 @@ void avoidObstacle(){
     FA_Right(2);
   }
 
-  if(FA_ReadIR(IR_RIGHT) > CRASH_THRESHOLD || FA_ReadIR(IR_FRONT_LEFT) > CRASH_THRESHOLD){
+  if(FA_ReadIR(IR_RIGHT) > CRASH_THRESHOLD || FA_ReadIR(IR_FRONT_RIGHT) > CRASH_THRESHOLD){
     FA_Left(2);
   }
 }
@@ -408,6 +408,7 @@ int main(){
 
       case MAIN_DETECT:
         detect();
+        avoidObstacle();
       break;
 
       case MAIN_TURN:
