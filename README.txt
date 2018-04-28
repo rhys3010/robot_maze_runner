@@ -3,12 +3,12 @@
 ===================
 
 Author: Rhys Evans (rhe24@aber.ac.uk)
-Version: 0.1
+Version: 1.0
 
 == Introduction ==
 Maze Runner is a hybrid controller for the Formula Allcode Robot Buggy that
 combines low-level reactive behaviours and higher level deliberative behaviours
-to safely map and navigate a 4x4 maze.  
+to safely map and navigate a 4x4 maze.
 
 == Prerequisites ==
 
@@ -24,5 +24,4 @@ to safely map and navigate a 4x4 maze.
 the robot's bootloader
 
 * Then, ensuring the robot's bootloader is active by pressing the 'reset' button,
-run the script 'load.sh'. 
-
+run the script 'load.sh'.
