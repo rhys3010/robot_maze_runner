@@ -1,5 +1,10 @@
-\contentsline {section}{\numberline {1}Introduction}{1}
-\contentsline {section}{\numberline {2}Introduction}{3}
-\contentsline {section}{\numberline {3}Design Analysis}{3}
-\contentsline {section}{\numberline {4}Implementation}{3}
-\contentsline {section}{\numberline {5}Evaluation}{3}
+\contentsline {section}{\numberline {1}Introduction}{3}
+\contentsline {section}{\numberline {2}Design Analysis}{3}
+\contentsline {subsection}{\numberline {2.1}Modelling The Maze}{3}
+\contentsline {subsection}{\numberline {2.2}Modelling The Robot}{3}
+\contentsline {subsection}{\numberline {2.3}Navigating The Maze}{3}
+\contentsline {subsection}{\numberline {2.4}Drawing The Maze}{4}
+\contentsline {section}{\numberline {3}Implementation}{4}
+\contentsline {subsection}{\numberline {3.1}The Maze Model}{4}
+\contentsline {section}{\numberline {4}Testing}{4}
+\contentsline {section}{\numberline {5}Evaluation}{4}

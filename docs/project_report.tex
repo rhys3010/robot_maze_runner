@@ -7,7 +7,7 @@
 \usepackage{graphicx}
 
 \begin{document}
-	\title{CS26020 Assignment \\ Developing a Maze Solving Robot Controller \\ Project Report}
+	\title{CS26020 Assignment \\ Developing a Maze Exploring Robot Controller \\ Project Report}
 	\author{Rhys Evans (rhe24@aber.ac.uk)}
 	\date{25th April 2018}
 	\maketitle
@@ -16,11 +16,53 @@
 	\newpage
 	
 	\section{Introduction}
+	The objective of this project was to create a robot controller capable of exploring a perfect maze. This was accomplished by combining reactive and deliberative robotic behaviours, thus creating a 'hybrid' system. In this report I will discuss and evaluate the process of designing, implementing and testing the controller, along with the challenges I faced. In addition, I will discuss any changes I would make to the system if done again.
 	
 	\section{Design Analysis}
+	In this section I will analyse various aspects of the controller's design and discuss some of the decisions I made when designing the system.
+	
+	\subsection{Modelling The Maze}
+	Arguably the most important aspect of this controller is the maze model, without a reliable maze model there is no basis for the deliberative behaviour of the controller. I decided to use a fairly simple 2D Array of 'Cell' structs to represent tha maze. As there was no need for the robot to start in an arbitrary position I felt this was a sufficient method and would make indexing the maze (a common occurance) very easy.
+	
+	\subsection{Modelling The Robot}
+	Having already decided on a method to store the maze I also needed to put some thought into representing the robot within the maze in a way that supported the maze model. I came to the conclusion that in order to fully encapsulate the robot I needed to store the following information:\\
+	
+	\begin{itemize}
+		\item The robot's position within the maze (X and Y)
+		\item The robot's orientation (North, West, South East)
+		\item The number of cells the robot has visited\\
+	\end{itemize}
+	
+	Most of these seemed pretty straight forward to implement, however in reflection I feel that I could have put more thought into the robot's orientation and how it would be decided.
+	
+	\subsection{Navigating The Maze}
+	Now that I had a model in mind for both the robot and the maze it was easier to think about how the robot would use its hybrid behaviour to navigate the maze. 
+	
+	% Order of Operations: Detect, Turn, Drive | State Machine | LHR | Finding the Nest | Detecting Completion%
+
+	Firstly I decided on the method that the robot would use to fully explore the maze, I settled on the 'left hand rule'. This would mean that at each given cell the robot's preference of direction would be as follows:\\
+	
+	\begin{enumerate}
+		\item Turn Left
+		\item Go Foward
+		\item Turn Right
+		\item Turn Around\\
+	\end{enumerate}
+	
+	If the first option is unavailable, attempt the second and so on.
+	
+	
+	\subsection{Drawing The Maze}
+	
+	
+	
+	
 	
 	\section{Implementation}
+	\subsection{The Maze Model}
+	Within the 'Cell' structures of the maze array are two attributes 'visited' and 'walls'. The 'visited' attribute is simply a boolean to store wether or not the cell has already been explored. The 'walls' attribute is a boolean array of 4 elements to represent the four walls of the maze (0 if no wall is present, 1 if wall is present). Lastly there is a single global variable of type 'Cell' to store the 'nest cell'.
 	
+	\section{Testing}
 	\section{Evaluation}
 	
 	
