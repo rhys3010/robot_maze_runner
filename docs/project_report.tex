@@ -103,22 +103,39 @@
 	
 	I chose these states based on the different behaviours of the robot and the necessary operations to explore the maze. Each state has a corresponding function within the program that is only called once from within a switch-case statement in the main loop. Each function performs the operations associated with that state repeatedly until the state is changed.\\
 	
-	The system stores the current state in a global variable, which is only changed through a 'changeState()' function. Use of this function allows 'one-time-only behaviours', for example when the Finish state is entered a short tune plays just once through this function. State changes are triggered by certain events within the current state, this is illustrated in the below State Machine Diagram: \\
+	The system stores the current state in a global variable, which is only changed through a 'changeState()' function. Use of this function allows 'one-time-only behaviours', for example when the Finish state is entered a short tune plays just once through this function. State changes are triggered by certain events within the current state, this is illustrated in the below State Machine Diagram:
+	
+	\begin{figure}[!htb]
+		\centering
+			\includegraphics[width=0.75\linewidth]{./img/smd.png}
+			\caption{State Machine Diagram}
+			\label{fig:state-diagram}
+	\end{figure}
 	
 	The reactive aspect of the robot's behaviour is implemented in the obstacle avoidance function within the 'Drive' state. It allows the robot to correct its position and prevent itself from colliding with the walls by using the IR sensors on the left and right side of the robot.\\
 	
 	The robot must be able to detect cell changes in order to advance the state machine, this is done by checking for a very small reading from underside IR sensors of the robot. When a sufficiently small reading is detected the controller delays for 500ms then stops the robot and advances the state. The purpose of the 500ms delay is to allow the robot to continue creeping all the way into the cell before stopping and to ensure no false-positive readings from the line sensors. Although it would probably have been better practice to use a timing system. I felt that the delay was short enough that it wouldn't obstruct any of the robot's behaviours.
 	
+	\newpage
 	
 	\subsection{Drawing The Maze}
 	At first glance, implementing the maze drawing based on the design specified seemed straightforward. However, one issue I overlooked was the difference in coordinates between the 2D Array and the LCD Screen. (0, 0) on the LCD Screen is on the top left, whereas it is in the bottom left in the Maze Model. To solve this problem I inverted the Y axis of the LCD screen when drawing.\\
 	
 	To draw the maze, the 2D Array is iterated over twice with nested for-loops, the first pair of for-loops simply draws the border walls of the maze. The second, larger for-loop draws all the walls within the maze and plots the robot's position within the maze. The maze drawing all happens within a drawMaze() function, which is called every time the robot enters a new cell, in order to update the drawing. Below is an image of a completed maze being drawn on the LCD: 
 	
+	\begin{figure}[!htb]
+		\centering
+			\includegraphics[width=0.5\linewidth]{./img/maze.jpg}
+			\caption{Maze Represented on LCD Screen}
+			\label{fig:maze-draw}
+	\end{figure}
+	
 	\section{Testing}
 	One of the biggest differences I noticed between programming for an embedded system versus a non-embedded system was the testing and debugging process. Although the bluetooth connection proved very helpful to debug certain issues during testing I still found myself spending more time than usual solving simple problems. If I were to undertake a project like this again in the future, I would test more frequently and try to implement less features between each test.\\
 	
 	To support debugging in my controller I have implemented a printDebugStream() function to send debug information through bluetooth. This function is called within a preprocessor ifdef statement each time the robot enters a new cell. Using the preprocessor for this allowed me to quickly enable or disable debugging within the system, this proved very helpful when testing the functionality of the controller.
+	
+	\newpage
 	
 	\section{Evaluation and Improvements}
 	I feel that overall my hybrid controller makes a good attempt at solving the maze exploration problem. My maze model was able to support the deliberative behaviour of the robot and effectively map the maze and the obstacle avoidance within my controller enabled to robot to behave reactively. I was also able to implement the representation of the maze on the LCD Screen.\\
@@ -135,4 +152,4 @@
 	\subsection{The 'Breadcrumbs' Method}
 	This method is considerably less simple than the above, however it should always find the shortest route back to the nest, thus making it more efficient. To implement this method I would have introduced a new state machine as above, that splits the drive state into three sub-states: 'pre-nest', 'post-nest' and 'return'. Each one causing a different behaviour, the 'pre-nest' would explore the maze as normal until the nest is found, then 'post-nest' would be entered. Whilst the system is in this state, the controller would incrementally leave a 'breadcrumb' at each new cell, this would be represented as an additional attribute in the 'Cell' structure. Once the maze is fully explored the system would enter the 'return' state, where it would scan all it's adjacent cells for the smallest numbered 'breadcrumb', then travel to that cell. The robot would continue with this method until the nest is encountered.
 	
-\end{document}}
+\end{document}
