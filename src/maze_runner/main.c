@@ -239,6 +239,14 @@ void initialize(){
   // Draw maze in initial state.
   drawMaze();
 
+  // Reset robot position + direction
+  currentPosX = 1;
+  currentPosY = 0;
+  currentDirection = DIR_NORTH;
+
+  // Reset nest position
+  nestCell = 0;
+
   // Move to the next state...
   changeMainState(MAIN_DETECT);
 }
